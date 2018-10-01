@@ -50,7 +50,7 @@ def best_function_use_model(x,y):
     #####
     return w,b
 
-def best_function_2d(tf,tl):
+def best_function_xd(tf,tl):
     ###  best function
     x=np.matrix(tf)
     y=np.matrix(tl)
