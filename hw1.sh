@@ -1,1 +1,1 @@
-python3 hw1_test.py  hw1_model_x.npy hw1_model_y.npy $1 $2
+python3 hw1_test.py  hw1_3feat.npy $1 $2

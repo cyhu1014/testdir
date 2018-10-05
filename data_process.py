@@ -158,7 +158,6 @@ def train_dataset_xd (train_data,x):
     for i in range (12):
         index=0
         for j in range (length//(x+1)):
-            print(j)
             train_feat.append([])
             for k in range (x):
                 train_feat[l_index].append(train_data[i][index])
@@ -169,6 +168,42 @@ def train_dataset_xd (train_data,x):
             l_index+=1 
     print("tf_",str(x),len(train_feat),", tl_",str(x),(len(train_label)))
     return train_feat,train_label
+
+def train_dataset_pm25_9hr_overlap (train_data):
+    train_feat=[]
+    train_label=[]
+    index_tabel=0
+    for i in range (12):
+        print(i)
+        for j in range (471):
+            train_feat.append([])
+            
+            for k in range (j,j+9):
+            
+                train_feat[index_tabel].append(train_data[i][k])
+            train_feat[index_tabel].append(1)
+            train_label.append(train_data[i][j+9])
+            index_tabel+=1
+    return train_feat ,train_label
+
+def train_dataset_pm25_9hr_overlap_square (train_data):
+    train_feat=[]
+    train_label=[]
+    index_tabel=0
+    for i in range (12):
+        print(i)
+        for j in range (471):
+            train_feat.append([])
+            
+            for k in range (j,j+9):       
+                train_feat[index_tabel].append(train_data[i][k])
+                train_feat[index_tabel].append(train_data[i][k]**2)
+            train_feat[index_tabel].append(1)
+            train_label.append(train_data[i][j+9])
+            index_tabel+=1
+    return train_feat ,train_label
+
+
 
 def train_all_feat_9hr(train_data):
     train_feat=[]
@@ -189,6 +224,20 @@ def train_all_feat_9hr(train_data):
             index_l+=1
     return train_feat,train_label
 
+def train_all_feat_9hr_overlap(train_data):
+    train_feat=[]
+    train_label=[]
+    index_l=0
+    for i in range (12):
+        for j in range (471):
+            train_feat.append([])
+            for l in range(j,j+9):
+                for k in range (18):
+                    train_feat[index_l].append(train_data[i][j][k])
+            train_feat[index_l].append(1)   
+            train_label.append(train_data[i][j+9][9])
+            index_l+=1
+    return train_feat,train_label
 
 
 def create_test_submission_2d(test,y):
@@ -244,10 +293,254 @@ def create_test_submission_xd(test,y):
         temp=0
         for j in range (feat_num):
             temp+=y[j]*test_feat[i][j]
-        temp+=y[5]
+        temp+=y[9]
         test_label.append(temp[0,0])
 
     df =pd.DataFrame(test_label,test_title)
    
-    df.to_csv("submit_w1_5feat.csv",header=False)
+    df.to_csv("submit_9feat.csv",header=False)
+    return df 
+
+def create_test_submission_allfeat(test,y):
+    
+    feat_num = len(y)-1
+    test_feat  =[]
+    test_label =[]
+    test_title =[]
+    row=9 
+
+    ###create test feat
+    row=0
+    for i in range(260):
+        test_feat.append([])
+        for j in range (2,11):
+            for k in range (18):
+                if(test[j][row]=='NR'):
+                    test_feat[i].append(0)
+                else:
+                    test_feat[i].append(float(test[j][row]))
+                row+=1
+            row-=18
+        row+=18
+    print(len(test_feat[1]))
+
+    ###create answer file
+    test_title.append("id")
+    test_label.append("value")
+    for i in range (260):
+        test_title.append("id_"+str(i))
+        temp=0
+        for j in range (feat_num):
+            temp+=y[j]*test_feat[i][j]
+        temp+=y[feat_num]
+        test_label.append(temp[0,0])
+
+    df =pd.DataFrame(test_label,test_title)
+   
+    df.to_csv("submit_allfeat_overlap.csv",header=False)
+    return df 
+
+
+def create_test_submission_xd_use_model(test,y):
+    
+    feat_num = len(y)-1
+    test_feat  =[]
+    test_label =[]
+    test_title =[]
+    row=9 
+
+    ###create test feat
+    
+    for i in range(260):
+        test_feat.append([])
+        for j in range (11-feat_num,11):
+            test_feat[i].append(float(test[j][row]))
+        row+=18
+
+
+    test_title.append("id")
+    test_label.append("value")
+    for i in range (260):
+        test_title.append("id_"+str(i))
+        temp=0
+        for j in range (feat_num):
+            temp+=y[j]*test_feat[i][j]
+        temp+=y[9]
+        test_label.append(temp[0])
+
+    df =pd.DataFrame(test_label,test_title)
+   
+    return df 
+
+
+def create_test_submission_pm25_square(test,y):
+    
+    feat_num = (len(y)-1)//2
+    print(feat_num)
+    test_feat  =[]
+    test_label =[]
+    test_title =[]
+    row=9 
+
+    ###create test feat
+    
+    for i in range(260):
+        test_feat.append([])
+        for j in range (11-feat_num,11):
+            test_feat[i].append(float(test[j][row]))
+            test_feat[i].append(float(test[j][row])**2)
+
+        row+=18
+
+
+    test_title.append("id")
+    test_label.append("value")
+    for i in range (260):
+        test_title.append("id_"+str(i))
+        temp=0
+        for j in range (feat_num*2):
+            temp+=y[j]*test_feat[i][j]
+        temp+=y[18]
+        test_label.append(temp[0,0])
+
+    df =pd.DataFrame(test_label,test_title)
+   
+    df.to_csv("submit_9feat_square.csv",header=False)
+    return df 
+
+def train_dataset_some_feat (train_data) :
+    tf =[]
+    tl =[]
+    pm25_mean=0
+    pm25_mean_num=0
+    pm10_mean=0
+    pm10_mean_num=0
+    co_mean=0
+    co_mean_num=0
+    ##calculate mean
+    for i in range (12):
+        for j in range (20):
+            if(train_data[i][j][2]>0):
+                co_mean+=train_data[i][j][2]
+                co_mean_num+=1
+            if(train_data[i][j][8]>0):
+                pm10_mean+=train_data[i][j][8]
+                pm10_mean_num+=1
+            if(train_data[i][j][9]>0 and train_data[i][j][9]<200):
+                pm25_mean+=train_data[i][j][9]
+                pm25_mean_num+=1
+    co_mean/=co_mean_num
+    pm10_mean/=pm10_mean_num
+    pm25_mean/=pm25_mean_num
+    #print(co_mean,pm10_mean,pm25_mean)
+    ####replace bad data by mean
+    for i in range (12):
+        for j in range (20):
+            if(train_data[i][j][2]<=0):
+                train_data[i][j][2]=co_mean
+            if(train_data[i][j][8]<=0):
+                train_data[i][j][8]=pm10_mean
+            if(train_data[i][j][9]<=0 or train_data[i][j][9]>=200):
+                train_data[i][j][9]=pm25_mean
+    index=0
+    for i in range (12):
+        for j in range (471):
+            tf.append([])
+            tl.append([])
+            for k in range(j,j+9):
+                tf[index].append(train_data[i][k][2])
+                tf[index].append(train_data[i][k][8])
+                tf[index].append(train_data[i][k][9])
+            tf[index].append(1)
+            tl[index].append(train_data[i][j+9][9])
+            index+=1
+    return tf,tl
+
+def create_test_submission_somefeat(test,y):
+    feat_num = (len(y)-1)//3
+  
+    test_feat  =[]
+    test_label =[]
+    test_title =[]
+    row=2 
+
+    ###create test feat
+    
+    for i in range(260):
+        test_feat.append([])
+        for j in range (11-feat_num,11):
+            if(float(test[j][row])>0):
+                test_feat[i].append(float(test[j][row]))
+            else:
+                test_feat[i].append(0.547)
+            if(float(test[j][row+6])>0):
+                test_feat[i].append(float(test[j][row+6]))
+            else:
+                test_feat[i].append(64.4)
+            if(float(test[j][row+7])>0 and float(test[j][row+7])<200):
+                test_feat[i].append(float(test[j][row+7]))
+            else:
+                test_feat[i].append(36.5)
+            
+
+        row+=18
+
+
+    test_title.append("id")
+    test_label.append("value")
+    for i in range (260):
+        test_title.append("id_"+str(i))
+        temp=0
+        for j in range (feat_num*3):
+            temp+=y[j]*test_feat[i][j]
+        temp+=y[27]
+        test_label.append(temp[0,0])
+
+    df =pd.DataFrame(test_label,test_title)
+   
+    df.to_csv("submit_3feat.csv",header=False)
+    return df 
+def create_test_submission_somefeat_use_model(test,y):
+    feat_num = (len(y)-1)//3
+  
+    test_feat  =[]
+    test_label =[]
+    test_title =[]
+    row=2 
+
+    ###create test feat
+    
+    for i in range(260):
+        test_feat.append([])
+        for j in range (11-feat_num,11):
+            if(float(test[j][row])>0):
+                test_feat[i].append(float(test[j][row]))
+            else:
+                test_feat[i].append(0.547)
+            if(float(test[j][row+6])>0):
+                test_feat[i].append(float(test[j][row+6]))
+            else:
+                test_feat[i].append(64.4)
+            if(float(test[j][row+7])>0 and float(test[j][row+7])<200):
+                test_feat[i].append(float(test[j][row+7]))
+            else:
+                test_feat[i].append(36.5)
+            
+
+        row+=18
+
+
+    test_title.append("id")
+    test_label.append("value")
+    for i in range (260):
+        test_title.append("id_"+str(i))
+        temp=0
+        for j in range (feat_num*3):
+            temp+=y[j]*test_feat[i][j]
+        temp+=y[27]
+        test_label.append(temp[0])
+
+    df =pd.DataFrame(test_label,test_title)
+   
+    df.to_csv("submit_3feat.csv",header=False)
     return df 
