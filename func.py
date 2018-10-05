@@ -1,7 +1,7 @@
 ###for ntu_ml 2018 hw1
 import math
 import numpy as np
-import matplotlib.pyplot as plt
+
 
 def validation (tl,tf,w,b):
     loss_train=0
@@ -157,3 +157,42 @@ def val (tf,tl,w,b):
     loss_val = math.sqrt(loss_val/(end-start))
 
     return loss_val
+
+def loss_function_reg (tf,tl,iteration,lr,reg):
+    w=3
+    b=3
+
+    loss_change =[]
+    val_change  =[]
+    for i in range (iteration):
+        (w,b,loss)=lf_reg(tf,tl,w,b,lr,reg)
+        
+        loss_change.append(loss)         
+        loss_val = val (tf,tl,w,b)
+        val_change.append(loss_val)
+
+    print("lambda: ",reg)
+    print("w:",w)
+    print("b:",b)
+    print("loss:",loss)
+    print("val",loss_val)
+    return w,b,loss_change
+
+def lf_reg(tf,tl,w,b,lr,reg):
+    length=len(tf)
+    length=length*9//10
+    y=0
+    loss = 0
+    w_next=0
+    b_next=0
+    for i in range (length):
+        y=w*tf[i]+b
+        loss+=(y-tl[i])**2
+        w_next+=2*(tl[i]-y)*(-tl[i])
+        b_next+=2*(tl[i]-y)*(-1)
+    w_next+=reg*(w**2)
+    w_next=w_next*(-1)*lr+w
+    b_next=b_next*(-1)*lr+b
+    loss = math.sqrt(loss/length)
+    
+    return (w_next,b_next,loss)
