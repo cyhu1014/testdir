@@ -176,7 +176,7 @@ def loss_function_reg (tf,tl,iteration,lr,reg):
     print("b:",b)
     print("loss:",loss)
     print("val",loss_val)
-    return w,b,loss_change
+    return w,b,loss_change,reg
 
 def lf_reg(tf,tl,w,b,lr,reg):
     length=len(tf)

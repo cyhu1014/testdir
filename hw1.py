@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 import data_process
 import func
-
+import matplotlib.pyplot as plt
 train  = pd.read_csv("train.csv",encoding="big5" ,header=None)
 test   = pd.read_csv("test.csv",encoding="big5" ,header=None)
 ####train_using only pm25
@@ -68,9 +68,25 @@ data_process.create_test_submission_somefeat(test,y)
 
 ###train with regularization
 (tf,tl)= data_process.train_dataset_1(train_modify)
-(w,b,loss1)=func.loss_function_reg(tf,tl,10000,1e-9,0)
-(w,b,loss1)=func.loss_function_reg(tf,tl,10000,1e-9,0.0000001)
-(w,b,loss1)=func.loss_function_reg(tf,tl,10000,1e-9,0.000001)
-(w,b,loss1)=func.loss_function_reg(tf,tl,10000,1e-9,0.0001)
-(w,b,loss1)=func.loss_function_reg(tf,tl,10000,1e-9,0.01)
-(w,b,loss1)=func.loss_function_reg(tf,tl,10000,1e-9,1)
+itr =100
+(w,b,loss1,lam)=func.loss_function_reg(tf,tl,itr,1e-7,0)
+plt.plot(loss1,label=str(lam))
+data_process.create_test_submission_with_lam(test,w,b,lam)
+(w,b,loss2,lam)=func.loss_function_reg(tf,tl,itr,1e-7,4000)
+plt.plot(loss2,label=str(lam))
+
+data_process.create_test_submission_with_lam(test,w,b,lam)
+(w,b,loss5,lam)=func.loss_function_reg(tf,tl,itr,1e-7,10000)
+plt.plot(loss5,label=str(lam))
+data_process.create_test_submission_with_lam(test,w,b,lam)
+(w,b,loss5,lam)=func.loss_function_reg(tf,tl,itr,1e-7,100000)
+plt.plot(loss5,label=str(lam))
+data_process.create_test_submission_with_lam(test,w,b,lam)
+(w,b,loss6,lam)=func.loss_function_reg(tf,tl,itr,1e-7,1000000)
+plt.plot(loss6,label=str(lam))
+data_process.create_test_submission_with_lam(test,w,b,lam)
+(w,b,loss7,lam)=func.loss_function_reg(tf,tl,itr,1e-7,3000000)
+plt.plot(loss7,label=str(lam))
+data_process.create_test_submission_with_lam(test,w,b,lam)
+plt.legend()
+plt.savefig("different_iteration1.jpg")

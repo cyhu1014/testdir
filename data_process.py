@@ -501,6 +501,7 @@ def create_test_submission_somefeat(test,y):
     df.to_csv("submit_3feat.csv",header=False)
     return df 
 def create_test_submission_somefeat_use_model(test,y):
+
     feat_num = (len(y)-1)//3
   
     test_feat  =[]
@@ -542,5 +543,71 @@ def create_test_submission_somefeat_use_model(test,y):
 
     df =pd.DataFrame(test_label,test_title)
    
-    df.to_csv("submit_3feat.csv",header=False)
+    
     return df 
+
+def create_test_submission_somefeat_use_model_int(test,y):
+
+    feat_num = (len(y)-1)//3
+  
+    test_feat  =[]
+    test_label =[]
+    test_title =[]
+    row=2 
+
+    ###create test feat
+    
+    for i in range(260):
+        test_feat.append([])
+        for j in range (11-feat_num,11):
+            if(float(test[j][row])>0):
+                test_feat[i].append(float(test[j][row]))
+            else:
+                test_feat[i].append(0.547)
+            if(float(test[j][row+6])>0):
+                test_feat[i].append(float(test[j][row+6]))
+            else:
+                test_feat[i].append(64.4)
+            if(float(test[j][row+7])>0 and float(test[j][row+7])<200):
+                test_feat[i].append(float(test[j][row+7]))
+            else:
+                test_feat[i].append(36.5)
+        row+=18
+    test_title.append("id")
+    test_label.append("value")
+    for i in range (260):
+        test_title.append("id_"+str(i))
+        temp=0
+        for j in range (feat_num*3):
+            temp+=y[j]*test_feat[i][j]
+        temp+=y[27]
+        if(temp[0]-int(temp[0])>0.5):
+            test_label.append(int(temp[0])+1)
+        else:
+            test_label.append(int(temp[0]))
+
+    df =pd.DataFrame(test_label,test_title)
+    return df 
+
+def create_test_submission_with_lam(test,w,b,lam):
+    x=1
+    test_feat= []
+    test_label=[]
+    test_title =[]
+    row=9
+    for i in range(260):
+        pm25_mean=0
+        for j in range(11-x,11):
+            pm25_mean+=float(test[j][row])
+            test_feat.append(pm25_mean/x)
+        row+=18
+    test_title.append("id")
+    test_label.append("value")
+    for i in range (260):
+        test_title.append("id_"+str(i))
+        test_label.append(test_feat[i]*w+b)
+
+    df =pd.DataFrame(test_label,test_title)
+    df.to_csv("submit_lambda:"+str(lam)+".csv",header=False)
+    return df 
+
