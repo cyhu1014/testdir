@@ -1,7 +1,7 @@
 ###for ntu_ml 2018 hw1
 import math
 import numpy as np
-
+import matplotlib.pyplot as plt
 
 def validation (tl,tf,w,b):
     loss_train=0

@@ -417,6 +417,10 @@ def train_dataset_some_feat (train_data) :
     pm10_mean_num=0
     co_mean=0
     co_mean_num=0
+    nox_mean =0
+    nox_mean_num =0
+    so2_mean=0
+    so2_mean_num =0
     ##calculate mean
     for i in range (12):
         for j in range (20):
@@ -429,10 +433,19 @@ def train_dataset_some_feat (train_data) :
             if(train_data[i][j][9]>0 and train_data[i][j][9]<200):
                 pm25_mean+=train_data[i][j][9]
                 pm25_mean_num+=1
+            ##another two parameters
+            if(train_data[i][j][6]>0):
+                nox_mean+=train_data[i][j][6]
+                nox_mean_num+=1
+            if(train_data[i][j][12]>0):
+                so2_mean+=train_data[i][j][12]
+                so2_mean_num+=1
     co_mean/=co_mean_num
     pm10_mean/=pm10_mean_num
     pm25_mean/=pm25_mean_num
-    #print(co_mean,pm10_mean,pm25_mean)
+    nox_mean/=nox_mean_num
+    so2_mean/=so2_mean_num 
+    #print(co_mean,pm10_mean,pm25_mean,nox_mean,so2_mean)
     ####replace bad data by mean
     for i in range (12):
         for j in range (20):
@@ -442,6 +455,10 @@ def train_dataset_some_feat (train_data) :
                 train_data[i][j][8]=pm10_mean
             if(train_data[i][j][9]<=0 or train_data[i][j][9]>=200):
                 train_data[i][j][9]=pm25_mean
+            if(train_data[i][j][6]<=0):
+                train_data[i][j][6]=nox_mean
+            if(train_data[i][j][12]<=0):
+                train_data[i][j][12]=so2_mean
     index=0
     for i in range (12):
         for j in range (471):
@@ -451,6 +468,8 @@ def train_dataset_some_feat (train_data) :
                 tf[index].append(train_data[i][k][2])
                 tf[index].append(train_data[i][k][8])
                 tf[index].append(train_data[i][k][9])
+                #tf[index].append(train_data[i][k][6])
+                #tf[index].append(train_data[i][k][12])
             tf[index].append(1)
             tl[index].append(train_data[i][j+9][9])
             index+=1
@@ -481,7 +500,16 @@ def create_test_submission_somefeat(test,y):
                 test_feat[i].append(float(test[j][row+7]))
             else:
                 test_feat[i].append(36.5)
-            
+            '''
+            if(float(test[j][row+4])>0):
+                test_feat[i].append(float(test[j][row+4]))
+            else:
+                test_feat[i].append(20.8)
+            if(float(test[j][row+10])>0):
+                test_feat[i].append(float(test[j][row+10]))
+            else:
+                test_feat[i].append(3.1)
+            '''
 
         row+=18
 
@@ -498,7 +526,7 @@ def create_test_submission_somefeat(test,y):
 
     df =pd.DataFrame(test_label,test_title)
    
-    df.to_csv("submit_3feat.csv",header=False)
+    df.to_csv("3feat.csv",header=False)
     return df 
 def create_test_submission_somefeat_use_model(test,y):
 
