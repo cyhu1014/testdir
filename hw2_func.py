@@ -48,7 +48,7 @@ def train(feat,Y,data_num,iter):
 
 def train_2 (feat,Y):
     X = np.matrix(feat)
-    Y =np.matrix(Y)
+    Y = np.matrix(Y)
     Y = np.matrix.getT(Y)
     w = np.zeros(23)
     w = np.matrix(w)
@@ -78,7 +78,7 @@ def train_2 (feat,Y):
             
             for i in range(batch_size):
                 cross_entropy = - ( Yin[i,0]*Y_predict[i,0] + (1-Yin[i,0])*(1-Y_predict[i,0])    )
-               
+                
                 epoch_loss += cross_entropy
             
             for i in range (23):
@@ -138,4 +138,62 @@ def predict (test,w,b):
 
     df =pd.DataFrame(test_label,test_title)
     df.to_csv("testsummit.csv",header=False)
+
+def train_3 (feat,Y):
+    X = feat
+    
+    w = []
+    w_grad = []
+    
+    for i in range (24):
+        w.append(0)
+        w_grad.append(0)
+    
+
+    epoch_num =100 
+    batch_size = 100
+    batch_num = 20000//batch_size
    
+    l_rate = 0.003
+   
+    Y_predict = []
+    for i in range (batch_size):
+        Y_predict.append(0)
+    
+    for epoch in range(10000):
+        epoch_loss = 0.0
+        for idx in range(100):
+            Xin = X[idx*batch_size:(idx+1)*batch_size]
+            Yin = Y[idx*batch_size:(idx+1)*batch_size]
+            for i in range (batch_size):
+                Y_predict[i]=0
+                for j in range (23):
+                    Y_predict[i]+=Xin[i][j]*w[j]
+                Y_predict[i]+=w[23]
+            for i in range(batch_size):
+                Y_predict[i] = sigmoid(Y_predict[i])
+            
+            for i in range(batch_size):
+                cross_entropy = - ( Yin[i]*np.log(Y_predict[i]) + (1-Yin[i])*np.log(1-Y_predict[i])   )
+                
+                epoch_loss += cross_entropy
+            
+            for i in range (24):
+                w_grad[i]=0
+            
+        
+            for i in range(batch_size):
+                for j in range (23):
+                    w_grad[j] += -1 * (Yin[i] - Y_predict[i] ) * Xin[i][j]
+                w_grad[23] += -1 * (Yin[i] - Y_predict[i])
+            
+
+            for i in range (23):
+                w[i] = w[i] - l_rate * w_grad[i]
+            w[23] = w[23] - l_rate * w_grad[23]
+            
+        if (epoch+1) % 10== 0:
+            print ('avg_loss in epoch%d : %f' % (epoch+1, (epoch_loss / 20000)))
+            #print(w,b)
+        
+    return w
