@@ -19,3 +19,5 @@ def create_train_label(tl):
     for i in range(len(tl)):
         Y.append(float(tl['Y'][i]))
     return Y
+
+#def create_submit (w,b,test):

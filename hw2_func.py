@@ -45,3 +45,97 @@ def train(feat,Y,data_num,iter):
         cross_entropy_line.append(cross_entropy)
     print(len(fx))
     return w ,b ,cross_entropy_line
+
+def train_2 (feat,Y):
+    X = np.matrix(feat)
+    Y =np.matrix(Y)
+    Y = np.matrix.getT(Y)
+    w = np.zeros(23)
+    w = np.matrix(w)
+    w = np.matrix.getT(w)
+    b = np.zeros((1,))
+    
+    
+    
+    epoch_num =100 
+    batch_size = 100
+    batch_num = 20000//batch_size
+   
+    l_rate = 0.003
+    w_grad = []
+    for i in range (23):
+        w_grad.append(0)
+    
+    for epoch in range(100):
+        epoch_loss = 0.0
+        for idx in range(100):
+            Xin = X[idx*batch_size:(idx+1)*batch_size]
+            Yin = Y[idx*batch_size:(idx+1)*batch_size]
+            Y_predict = Xin*w+b
+            
+            for i in range(batch_size):
+                Y_predict[i,0] = sigmoid(Y_predict[i,0])
+            
+            for i in range(batch_size):
+                cross_entropy = - ( Yin[i,0]*Y_predict[i,0] + (1-Yin[i,0])*(1-Y_predict[i,0])    )
+               
+                epoch_loss += cross_entropy
+            
+            for i in range (23):
+                w_grad[i]=0
+            
+            
+            b_grad = 0
+            for i in range(batch_size):
+                for j in range (23):
+                    w_grad[j] += -1 * (Yin[i,0] - Y_predict[i,0] * Xin[i,j])
+                b_grad += -1 * (Yin[i,0] - Y_predict[i,0])
+            
+
+            for i in range (23):
+                w[i] = w[i] - l_rate * w_grad[i]
+            
+            b = b - l_rate * b_grad
+        if (epoch+1) % 1== 0:
+            print ('avg_loss in epoch%d : %f' % (epoch+1, (epoch_loss / 20000)))
+            #print(w,b)
+            
+    return w, b
+
+def feature_normalize(X_train):
+    need_normalize = [0,4,11,12,13,14,15,16,17,18,19,20,21,22]
+    normalize_min  = []
+    normalize_max  = []
+    for i  in range (len(need_normalize)):
+        normalize_max.append(-9999999999)
+        normalize_min.append(9999999999)
+        for j in range (len(X_train)):
+            normalize_max[i]=max(normalize_max[i],X_train[j][need_normalize[i]])
+            normalize_min[i]=min(normalize_min[i],X_train[j][need_normalize[i]])
+    for i in range (len(need_normalize)):
+        for j in range (len(X_train)): 
+            X_train[j][need_normalize[i]] = (X_train[j][need_normalize[i]]-normalize_min[i]) / (normalize_max[i] - normalize_min[i])
+            
+    return X_train
+
+def predict (test,w,b):
+    X = np.matrix(test)
+    Y = X*w+b
+    ans_list = []
+    for i in range (len(test)):
+        Y[i]=sigmoid(Y[i])
+        if(Y[i]>=0.5):
+            ans_list.append(1)
+        else:
+            ans_list.append(0)
+    test_label=[]
+    test_title =[]
+    test_title.append("id")
+    test_label.append("value")
+    for i in range (10000):
+        test_title.append("id_"+str(i))
+        test_label.append(ans_list[i])
+
+    df =pd.DataFrame(test_label,test_title)
+    df.to_csv("testsummit.csv",header=False)
+   
