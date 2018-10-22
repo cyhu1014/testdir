@@ -102,8 +102,11 @@ def train_2 (feat,Y):
             
     return w, b
 
-def feature_normalize(X_train):
-    need_normalize = [0,4,11,12,13,14,15,16,17,18,19,20,21,22]
+def feature_normalize_min_max(X_train):
+    #need_normalize = [0,4,11,12,13,14,15,16,17,18,19,20,21,22]
+    need_normalize = []
+    for i in range (23):
+        need_normalize.append(i)
     normalize_min  = []
     normalize_max  = []
     for i  in range (len(need_normalize)):
@@ -115,6 +118,31 @@ def feature_normalize(X_train):
     for i in range (len(need_normalize)):
         for j in range (len(X_train)): 
             X_train[j][need_normalize[i]] = (X_train[j][need_normalize[i]]-normalize_min[i]) / (normalize_max[i] - normalize_min[i])
+            
+    return X_train
+def feature_normalize_mean(X_train):
+    #need_normalize = [0,4,11,12,13,14,15,16,17,18,19,20,21,22]
+    need_normalize = []
+    for i in range (23):
+        need_normalize.append(i)
+    normalize_mean  = []
+    normalize_min  = []
+    normalize_max  = []
+    for i  in range (len(need_normalize)):
+        normalize_max.append(-9999999999)
+        normalize_min.append(9999999999)
+        for j in range (len(X_train)):
+            normalize_max[i]=max(normalize_max[i],X_train[j][need_normalize[i]])
+            normalize_min[i]=min(normalize_min[i],X_train[j][need_normalize[i]])
+    for i  in range (len(need_normalize)):
+        normalize_mean.append(0)
+        for j in range (len(X_train)):
+            normalize_mean[i]+=X_train[j][need_normalize[i]]
+        normalize_mean[i]/=len(X_train)
+            
+    for i in range (len(need_normalize)):
+        for j in range (len(X_train)): 
+            X_train[j][need_normalize[i]] = (X_train[j][need_normalize[i]]-normalize_mean[i]) / (normalize_max[i] - normalize_min[i])
             
     return X_train
 
@@ -154,7 +182,7 @@ def train_3 (feat,Y):
     batch_size = 100
     batch_num = 20000//batch_size
    
-    l_rate = 0.003
+    l_rate = 0.03
    
     Y_predict = []
     for i in range (batch_size):
@@ -162,7 +190,7 @@ def train_3 (feat,Y):
     
     for epoch in range(10000):
         epoch_loss = 0.0
-        for idx in range(100):
+        for idx in range(200):
             Xin = X[idx*batch_size:(idx+1)*batch_size]
             Yin = Y[idx*batch_size:(idx+1)*batch_size]
             for i in range (batch_size):
