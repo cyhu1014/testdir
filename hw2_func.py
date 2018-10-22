@@ -121,10 +121,12 @@ def feature_normalize_min_max(X_train):
             
     return X_train
 def feature_normalize_mean(X_train):
-    #need_normalize = [0,4,11,12,13,14,15,16,17,18,19,20,21,22]
+    need_normalize = [0,4,11,12,13,14,15,16,17,18,19,20,21,22]
+    '''
     need_normalize = []
     for i in range (23):
         need_normalize.append(i)
+    '''
     normalize_mean  = []
     normalize_min  = []
     normalize_max  = []
@@ -146,11 +148,16 @@ def feature_normalize_mean(X_train):
             
     return X_train
 
-def predict (test,w,b):
-    X = np.matrix(test)
-    Y = X*w+b
+def predict (X,w,text):
+    Y = []
+
+    for i in range (len(X)):
+        Y.append(0)
+        for j in range (len(X[0])):
+            Y[i]+=w[j]*X[i][j]
+        Y[i]+=w[23]    
     ans_list = []
-    for i in range (len(test)):
+    for i in range (len(X)):
         Y[i]=sigmoid(Y[i])
         if(Y[i]>=0.5):
             ans_list.append(1)
@@ -165,22 +172,20 @@ def predict (test,w,b):
         test_label.append(ans_list[i])
 
     df =pd.DataFrame(test_label,test_title)
-    df.to_csv("testsummit.csv",header=False)
+    df.to_csv(text,header=False)
 
 def train_3 (feat,Y):
     X = feat
     
     w = []
     w_grad = []
-    
     for i in range (24):
         w.append(0)
         w_grad.append(0)
     
-
     epoch_num =100 
     batch_size = 100
-    batch_num = 20000//batch_size
+    
    
     l_rate = 0.03
    
@@ -188,7 +193,7 @@ def train_3 (feat,Y):
     for i in range (batch_size):
         Y_predict.append(0)
     
-    for epoch in range(10000):
+    for epoch in range(100):
         epoch_loss = 0.0
         for idx in range(200):
             Xin = X[idx*batch_size:(idx+1)*batch_size]
@@ -225,3 +230,73 @@ def train_3 (feat,Y):
             #print(w,b)
         
     return w
+
+def train_4 (X,Y):
+    data_num = len(X)
+    feat_num = len(X[0])
+    valid_num = 0
+    unvalid_num = 0
+    mean_valid = []
+    mean_unvalid = []
+    for i in range (data_num):
+        if(Y[i]==0):
+            valid_num+=1
+        else:
+            unvalid_num+=1
+
+    for i in range (feat_num):
+        mean_valid.append(0)
+        mean_unvalid.append(0)
+    for i in range (data_num):
+        if (Y[i]==1):
+            for j in range(feat_num):
+                mean_valid[j]+=X[i][j]
+        else:
+            for j in range(feat_num):
+                mean_unvalid[j]+=X[i][j]
+    for i in range (feat_num):
+        mean_valid[i]/=valid_num
+        mean_unvalid[i]/=unvalid_num
+    
+    ###create valid mean and covariance matrix
+    uvalid  = np.matrix(mean_valid)
+    uvalidT = uvalid.getT()
+    uunvalid  = np.matrix(mean_unvalid)
+    uunvalidT = uunvalid.getT()
+    cm = []
+    for i in range (feat_num):
+        cm.append([])
+        for j in range (feat_num):
+            cm[i].append(0.0)
+    c_matrix_valid = np.matrix(cm)
+    c_matrix_unvalid = np.matrix(cm)
+    for i in range (data_num):
+        x = np.matrix(X[i])
+        if (Y[i]==1):
+            a = x-uvalid
+            aT = a.getT()
+            y=aT*a
+            c_matrix_valid+=y
+        else:
+            a = x-uunvalid
+            aT = a.getT()
+            y=aT*a
+            c_matrix_unvalid+=y
+    for i in range (feat_num):
+        for j in range (feat_num):
+            c_matrix_valid[i,j]/=valid_num
+            c_matrix_unvalid[i,j]/=unvalid_num
+    c_matrix = np.matrix(cm)
+    for i in range (feat_num):
+        for j in range (feat_num):
+            c_matrix[i,j]= c_matrix[i,j] + c_matrix_valid[i,j]*valid_num/data_num + c_matrix_unvalid[i,j] *unvalid_num/data_num
+    c_matrixI = c_matrix.getI()
+    
+    w = (uvalid-uunvalid) *c_matrixI
+    b = -0.5 * uvalid *c_matrixI*uvalidT + -0.5 * uunvalid *c_matrixI * uunvalidT +np.log(valid_num/unvalid_num)
+    
+    w_return = []
+    for i in range (feat_num):
+        w_return.append(w[0,i])
+    w_return.append(b[0,0])
+    return w_return
