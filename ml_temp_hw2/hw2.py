@@ -14,6 +14,7 @@ def main(args):
     feat = func.create_train_dataset(tf)
     feat = func.feat_expand(feat)
     Y    = func.create_train_label(tl)
+    feat = func.feat_onehot(feat)
     feat = func.feature_normalize_mean_covariance(feat)
     w= func.train_3(feat,Y)
     np.save("w",w)
@@ -21,6 +22,7 @@ def main(args):
     test = pd.read_csv(sys.argv[3],header=None)
     test = func.create_train_dataset(test)
     test = func.feat_expand(test)
+    test = func.feat_onehot(test)
     test = func.feature_normalize_mean_covariance(test)
     func.predict (test,w,"sc.csv")
     

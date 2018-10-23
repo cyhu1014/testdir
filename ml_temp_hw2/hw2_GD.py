@@ -1,11 +1,11 @@
 ##ntu-machine learning hw2
 ##predict GD
-import pandas as pd
+
 import numpy  as np
 import math
 import sys
 import hw2_func as func
-
+import pandas as pd
 def main(args):
     tf = pd.read_csv(sys.argv[1],header=None)
     tl = pd.read_csv(sys.argv[2],dtype=int)

@@ -102,6 +102,18 @@ def train_2 (feat,Y):
             
     return w, b
 
+def shuffle(X, Y):
+    feat_num = len(X[0])
+    data_num = len(X) 
+    for i in range (2000):
+        temp  = X[0]
+        X.remove(X[0])
+        X.append(temp)
+        temp  = Y[0]
+        Y.remove(Y[0])
+        Y.append(temp)
+    return X,Y
+            
 def feature_normalize_min_max(X_train):
     #need_normalize = [0,4,11,12,13,14,15,16,17,18,19,20,21,22]
     need_normalize = []
@@ -208,12 +220,9 @@ def train_3 (feat,Y):
     w_grad = []
     for i in range (feat_num+1):
         w.append(0)
-        w_grad.append(0)
-    
+        w_grad.append(0)    
     batch_size = 100
-    
-   
-    l_rate = 0.0003
+    l_rate = 0.0006
    
     Y_predict = []
     for i in range (batch_size):
@@ -221,6 +230,7 @@ def train_3 (feat,Y):
     
     for epoch in range(1000):
         epoch_loss = 0.0
+        X,Y = shuffle(X,Y)
         for idx in range(180):
             Xin = X[idx*batch_size:(idx+1)*batch_size]
             Yin = Y[idx*batch_size:(idx+1)*batch_size]
@@ -340,6 +350,76 @@ def train_4 (X,Y):
     w_return.append(b[0,0])
     return w_return
 
+
+def train_5 (X,Y):
+    feat_num = len(X[0])
+    w = []
+    w_grad = []
+    for i in range (feat_num):
+        w.append(0)
+        w_grad.append(0)    
+    b=0.0
+    b_grad = 0.0
+    batch_size = 100
+    l_rate = 0.0003
+    
+    Y_predict = []
+    for i in range (batch_size):
+        Y_predict.append(0)
+    w = np.matrix(w)
+    for epoch in range(1000):
+        epoch_loss = 0.0
+        X,Y = shuffle(X,Y)
+        for idx in range(180):
+            Xin = X[idx*batch_size:(idx+1)*batch_size]
+            Yin = Y[idx*batch_size:(idx+1)*batch_size]
+            Xin = np.matrix(Xin)
+
+            
+            Y_predict=Xin * w.getT()
+            Y_predict+=b
+           
+            Y_predict = sigmoid(Y_predict)
+            
+            for i in range(batch_size):
+                cross_entropy = - ( Yin[i]*np.log(Y_predict[i,0]) + (1-Yin[i])*np.log(1-Y_predict[i,0])   )
+                
+                epoch_loss += cross_entropy
+            
+            for i in range (feat_num):
+                w_grad[i]=0
+            b_grad
+        
+            for i in range(batch_size):
+                for j in range (feat_num):
+                    w_grad[j] += -1 * (Yin[i] - Y_predict[i,0] ) * Xin[i,j]
+                b_grad += -1 * (Yin[i] - Y_predict[i,0])
+            
+
+            for i in range (feat_num):
+                w[0,i] = w[0,i] - l_rate * w_grad[i]
+            b = b - l_rate * b_grad
+            
+        if (epoch+1) % 10== 0:
+            
+            epoch_loss_v = 0.0
+            Y_predict_v = []
+            for i in range(18000,20000):
+                Y_predict_v.append(0)
+                Y_predict_v[i-18000]=0
+                for j in range (feat_num):
+                    Y_predict_v[i-18000]+=X[i][j]*w[0,j]
+                Y_predict_v[i-18000]+=b
+                Y_predict_v[i-18000] = sigmoid(Y_predict_v[i-18000])
+                cross_entropy = - ( Y[i]*np.log(Y_predict_v[i-18000]) + (1-Y[i])*np.log(1-Y_predict_v[i-18000])   )
+                epoch_loss_v += cross_entropy
+            
+            print ('avg_loss in epoch%d : %f' % (epoch+1, (epoch_loss / 18000)),(epoch_loss_v/2000))
+            #print(w,b)
+        
+    return w
+
+
 def create_train_dataset(tf):
     feat=[]
 
@@ -365,6 +445,49 @@ def feat_expand (X):
             X[i].append(X[i][square[j]]**2)
         for j in range (len(cube)):
             X[i].append(X[i][square[j]]**3)
-    print(len(X),len(X[200]),len(X[8000]))
+    return X
 
+def feat_onehot (X):
+    data_num = len(X)
+    onehot = []
+    
+    for i in range (data_num):
+        ##sex
+        if(X[i][1]==1):
+            X[i].append(0)
+            X[i].append(1)
+        else:
+            X[i].append(1)
+            X[i].append(0)
+        ##education
+        if(X[i][2]==1):
+            X[i].append(0)
+            X[i].append(0)
+            X[i].append(0)
+            X[i].append(1)
+        elif(X[i][2]==2):
+            X[i].append(0)
+            X[i].append(0)
+            X[i].append(1)
+            X[i].append(0)
+        elif(X[i][2]==3):
+            X[i].append(0)
+            X[i].append(1)
+            X[i].append(0)
+            X[i].append(0)
+        else:
+            X[i].append(1)
+            X[i].append(0)
+            X[i].append(0)
+            X[i].append(0)
+        ##marriage
+        if(X[i][3]==1):
+            X[i].append(0)
+            X[i].append(1)
+        else:
+            X[i].append(1)
+            X[i].append(0)
+        X[i].remove(X[i][1])
+        X[i].remove(X[i][2])
+        X[i].remove(X[i][3])
     return X
