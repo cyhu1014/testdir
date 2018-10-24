@@ -116,8 +116,9 @@ def shuffle(X, Y):
             
 def feature_normalize_min_max(X_train):
     #need_normalize = [0,4,11,12,13,14,15,16,17,18,19,20,21,22]
+    feat_num = len(X_train[0])
     need_normalize = []
-    for i in range (23):
+    for i in range (feat_num-8):
         need_normalize.append(i)
     normalize_min  = []
     normalize_max  = []
@@ -161,13 +162,15 @@ def feature_normalize_mean(X_train):
     return X_train
 
 def feature_normalize_mean_covariance(X_train):
-    need_normalize = [0,4,11,12,13,14,15,16,17,18,19,20,21,22]
     feat_num = len(X_train[0])
-
-    
     need_normalize = []
     for i in range (feat_num-8):
         need_normalize.append(i)
+
+    
+    not_to_normalize = [1,2,3,5,6,7,8,9,10]
+    for i in range (len(not_to_normalize)):
+        need_normalize.remove(not_to_normalize[i])
     
     normalize_mean  = []
     covariance = []
@@ -179,7 +182,7 @@ def feature_normalize_mean_covariance(X_train):
     for i in range (len(need_normalize)):
         covariance.append(0)
         for j in range (len(X_train)):
-            temp =  (X_train[j][i]-normalize_mean[i])**2
+            temp =  (X_train[j][need_normalize[i]]-normalize_mean[i])**2
             covariance[i]+=temp
         covariance[i]/=len(X_train)
         covariance[i] = np.sqrt(covariance[i])
@@ -200,7 +203,7 @@ def predict (X,w,text):
     ans_list = []
     for i in range (len(X)):
         Y[i]=sigmoid(Y[i])
-        if(Y[i]>=0.5):
+        if(Y[i]>0.5):
             ans_list.append(1)
         else:
             ans_list.append(0)
@@ -282,8 +285,9 @@ def train_3 (feat,Y):
         
     return w
 
-def train_4 (X,Y):
-    data_num = len(X)
+def train_GD (X,Y):
+    data_num = 18000
+    valid_num = 2000
     feat_num = len(X[0])
     valid_num = 0
     unvalid_num = 0
@@ -327,6 +331,7 @@ def train_4 (X,Y):
             a = x-uvalid
             aT = a.getT()
             y=aT*a
+  
             c_matrix_valid+=y
         else:
             a = x-uunvalid
@@ -350,6 +355,28 @@ def train_4 (X,Y):
     for i in range (feat_num):
         w_return.append(w[0,i])
     w_return.append(b[0,0])
+    epoch_loss = 0.0
+    for i in range(data_num):
+        Y_predict = 0.0
+        for j in range (feat_num):
+            Y_predict +=w_return[j]*X[i][j]
+        Y_predict+=w_return[feat_num]
+        Y_predict = sigmoid(Y_predict)
+        cross_entropy = - ( Y[i]*np.log(Y_predict) + (1-Y[i])*np.log(1-Y_predict)   )
+        epoch_loss += cross_entropy
+    epoch_loss_train = epoch_loss
+    epoch_loss = 0.0
+    for i in range(valid_num):
+        Y_predict = 0.0
+        for j in range (feat_num):
+            Y_predict +=w_return[j]*X[i][j]
+        Y_predict+=w_return[feat_num]
+        Y_predict = sigmoid(Y_predict)
+        cross_entropy = - ( Y[i]*np.log(Y_predict) + (1-Y[i])*np.log(1-Y_predict)   )
+        epoch_loss += cross_entropy
+    print("epl: ",(epoch_loss_train/data_num),"epv:" ,(epoch_loss/valid_num))
+
+
     return w_return
 
 
@@ -440,13 +467,30 @@ def create_train_label(tl):
 
 def feat_expand (X):
     num = len(X)
-    square = [0,1,4,11,12,13,14,15,16,17,18,19,20,21,22]
-    cube   = [0,11,14]
+    square = [0,4,11,12,13,14,15,16,17,18,19,20,21,22]
+    cube   = [0,4,11,12,13,14,15,16,17,18,19,20,21,22]
+    quada  = [0,4,11,12,13,14,15,16,17,18,19,20,21,22]
+    panta  = [0,4,11,12,13,14,15,16,17,18,19,20,21,22]
+    six  = [0,4,11,12,13,14,15,16,17,18,19,20,21,22]
+    seven = [0]
     for i in range (num):
         for j in range (len(square)):
             X[i].append(X[i][square[j]]**2)
         for j in range (len(cube)):
             X[i].append(X[i][square[j]]**3)
+        for j in range (len(quada)):
+            X[i].append(X[i][square[j]]**4)
+        for j in range (len(panta)):
+            X[i].append(X[i][square[j]]**5)
+            X[i].append(X[i][square[j]]**6)
+            
+        
+        
+            
+        #for j in range (len(seven)):
+           # X[i].append(X[i][square[j]]**9)
+            
+            
     return X
 
 def feat_onehot (X):
@@ -489,7 +533,7 @@ def feat_onehot (X):
         else:
             X[i].append(1)
             X[i].append(0)
-        X[i].remove(X[i][1])
-        X[i].remove(X[i][2])
-        X[i].remove(X[i][3])
+        #X[i].remove(X[i][1])
+        #X[i].remove(X[i][2])
+        #X[i].remove(X[i][3])
     return X
