@@ -161,12 +161,14 @@ def feature_normalize_mean(X_train):
     return X_train
 
 def feature_normalize_mean_covariance(X_train):
-    #need_normalize = [0,4,11,12,13,14,15,16,17,18,19,20,21,22]
+    need_normalize = [0,4,11,12,13,14,15,16,17,18,19,20,21,22]
     feat_num = len(X_train[0])
+
+    
     need_normalize = []
-    for i in range (feat_num):
+    for i in range (feat_num-8):
         need_normalize.append(i)
-   
+    
     normalize_mean  = []
     covariance = []
     for i  in range (len(need_normalize)):
@@ -222,16 +224,16 @@ def train_3 (feat,Y):
         w.append(0)
         w_grad.append(0)    
     batch_size = 100
-    l_rate = 0.0006
+    l_rate = 0.0001
    
     Y_predict = []
     for i in range (batch_size):
         Y_predict.append(0)
     
-    for epoch in range(1000):
+    for epoch in range(200):
         epoch_loss = 0.0
-        X,Y = shuffle(X,Y)
-        for idx in range(180):
+        #X,Y = shuffle(X,Y)
+        for idx in range(200):
             Xin = X[idx*batch_size:(idx+1)*batch_size]
             Yin = Y[idx*batch_size:(idx+1)*batch_size]
             for i in range (batch_size):
@@ -275,7 +277,7 @@ def train_3 (feat,Y):
                 cross_entropy = - ( Y[i]*np.log(Y_predict_v[i-18000]) + (1-Y[i])*np.log(1-Y_predict_v[i-18000])   )
                 epoch_loss_v += cross_entropy
             
-            print ('avg_loss in epoch%d : %f' % (epoch+1, (epoch_loss / 18000)),(epoch_loss_v/2000))
+            print ('avg_loss in epoch%d : %f' % (epoch+1, (epoch_loss / 20000)),(epoch_loss_v/2000))
             #print(w,b)
         
     return w
@@ -367,7 +369,7 @@ def train_5 (X,Y):
     for i in range (batch_size):
         Y_predict.append(0)
     w = np.matrix(w)
-    for epoch in range(1000):
+    for epoch in range(200):
         epoch_loss = 0.0
         X,Y = shuffle(X,Y)
         for idx in range(180):
@@ -449,7 +451,7 @@ def feat_expand (X):
 
 def feat_onehot (X):
     data_num = len(X)
-    onehot = []
+    
     
     for i in range (data_num):
         ##sex
