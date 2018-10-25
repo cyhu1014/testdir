@@ -1,0 +1,1 @@
+python3 hw1_test.py  hw1_3feat.npy $1 $2
