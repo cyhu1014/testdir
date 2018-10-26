@@ -164,7 +164,7 @@ def feature_normalize_mean(X_train):
 def feature_normalize_mean_covariance(X_train):
     feat_num = len(X_train[0])
     need_normalize = []
-    for i in range (feat_num-8):
+    for i in range (feat_num):
         need_normalize.append(i)
 
     
@@ -218,25 +218,31 @@ def predict (X,w,text):
     df =pd.DataFrame(test_label,test_title)
     df.to_csv(text,header=False)
 
-def train_3 (feat,Y):
-    X = feat
-    feat_num = len(feat[0])
+def train_3 (X,Y):
+    train_set_num = 18000
+    valid_set_num = 2000
+    feat_num = len(X[0])
     w = []
     w_grad = []
+    w_grad_ada = []
     for i in range (feat_num+1):
-        w.append(0)
-        w_grad.append(0)    
+        w.append(1)
+        w_grad.append(0)
+        w_grad_ada.append(0)    
     batch_size = 100
-    l_rate = 0.0001
+    l_rate = 0.5
    
     Y_predict = []
     for i in range (batch_size):
         Y_predict.append(0)
     
-    for epoch in range(200):
+
+
+    for epoch in range(1000):
         epoch_loss = 0.0
+        
         #X,Y = shuffle(X,Y)
-        for idx in range(200):
+        for idx in range(train_set_num//100):
             Xin = X[idx*batch_size:(idx+1)*batch_size]
             Yin = Y[idx*batch_size:(idx+1)*batch_size]
             for i in range (batch_size):
@@ -261,7 +267,7 @@ def train_3 (feat,Y):
                     w_grad[j] += -1 * (Yin[i] - Y_predict[i] ) * Xin[i][j]
                 w_grad[feat_num] += -1 * (Yin[i] - Y_predict[i])
             
-
+            
             for i in range (feat_num):
                 w[i] = w[i] - l_rate * w_grad[i]
             w[feat_num] = w[feat_num] - l_rate * w_grad[feat_num]
@@ -280,7 +286,7 @@ def train_3 (feat,Y):
                 cross_entropy = - ( Y[i]*np.log(Y_predict_v[i-18000]) + (1-Y[i])*np.log(1-Y_predict_v[i-18000])   )
                 epoch_loss_v += cross_entropy
             
-            print ('avg_loss in epoch%d : %f' % (epoch+1, (epoch_loss / 20000)),(epoch_loss_v/2000))
+            print ('avg_loss in epoch%d : %f' % (epoch+1, (epoch_loss / train_set_num)),(epoch_loss_v/2000))
             #print(w,b)
         
     return w
@@ -467,12 +473,12 @@ def create_train_label(tl):
 
 def feat_expand (X):
     num = len(X)
-    square = [0,4,11,12,13,14,15,16,17,18,19,20,21,22]
-    cube   = [0,4,11,12,13,14,15,16,17,18,19,20,21,22]
-    quada  = [0,4,11,12,13,14,15,16,17,18,19,20,21,22]
-    panta  = [0,4,11,12,13,14,15,16,17,18,19,20,21,22]
-    six  = [0,4,11,12,13,14,15,16,17,18,19,20,21,22]
-    seven = [0]
+    square = [0,5,11,12,13,14,15,16,17,18,19,20,21,22]
+    cube   = [0,5,11,12,13,14,15,16,17,18,19,20,21,22]
+    quada  = []
+    panta  = []
+    six  = []
+    seven = []
     for i in range (num):
         for j in range (len(square)):
             X[i].append(X[i][square[j]]**2)
@@ -533,7 +539,19 @@ def feat_onehot (X):
         else:
             X[i].append(1)
             X[i].append(0)
-        #X[i].remove(X[i][1])
-        #X[i].remove(X[i][2])
-        #X[i].remove(X[i][3])
+        
     return X
+
+def feat_delelte (X):
+    delete_feat = [1,2,3]
+    for i in range (len(X)):
+        for j in range (len(delete_feat)):
+            X[i].remove(X[i][delete_feat[j]])
+    return X
+def feat_process (feat):
+    feat = feat_expand(feat)
+    feat = feat_onehot(feat)
+    feat = feat_delelte(feat)
+    feat = feature_normalize_mean_covariance(feat)
+    print("feat_num:" ,len(feat[0]))
+    return feat

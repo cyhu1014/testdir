@@ -12,18 +12,14 @@ def main(args):
     tf = pd.read_csv(sys.argv[1],header=None)
     tl = pd.read_csv(sys.argv[2],dtype=int)
     feat = func.create_train_dataset(tf)
-    feat = func.feat_expand(feat)
     Y    = func.create_train_label(tl)
-    feat = func.feat_onehot(feat)
-    feat = func.feature_normalize_mean_covariance(feat)
+    feat = func.feat_process(feat)
     w= func.train_3(feat,Y)
     np.save("w",w)
     
     test = pd.read_csv(sys.argv[3],header=None)
     test = func.create_train_dataset(test)
-    test = func.feat_expand(test)
-    test = func.feat_onehot(test)
-    test = func.feature_normalize_mean_covariance(test)
+    test = func.feat_process(test)
     func.predict (test,w,"sc.csv")
     
 if __name__ == '__main__':
