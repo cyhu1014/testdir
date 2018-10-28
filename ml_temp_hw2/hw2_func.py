@@ -2,7 +2,7 @@
 import pandas as pd
 import numpy  as np
 import math
-
+import random as r
 def sigmoid(X):
     res= 1 / (1 + np.exp(-X))
     return np.clip(res, 0.000000000001, 0.999999999999)
@@ -11,33 +11,51 @@ def sigmoid(X):
 def shuffle(X, Y):
     feat_num = len(X[0])
     data_num = len(X) 
+    
     for i in range (2000):
-        temp  = X[0]
+        X.append([])
+        for j in range(feat_num):
+            X[feat_num].append(X[0][j])
         X.remove(X[0])
-        X.append(temp)
-        temp  = Y[0]
+        
+        Y.append(Y[0])
         Y.remove(Y[0])
-        Y.append(temp)
+        
     return X,Y
             
-
-
+def shuf (X, Y):
+    data_num=len(X)
+    
+    newX=[]
+    newY=[]
+    for i in range (0,len(X)):
+        rand =r.randint(0,data_num-1)
+        newX.append([])
+        for j in range (len(X[0])):
+            newX[i].append(X[rand][j])
+        newY.append(Y[rand])
+        X.remove(X[rand])
+        Y.remove(Y[rand])
+        data_num-=1
+    return newX ,newY
 def feature_normalize_mean_covariance(X_train):
     feat_num = len(X_train[0])
     need_normalize = []
-    for i in range (feat_num-8):
+    for i in range (feat_num):
         need_normalize.append(i)
-
+    print(len(X_train))
     '''
-    not_to_normalize = [1,2,3,5,6,7,8,9,10]
+    not_to_normalize = [2]
     for i in range (len(not_to_normalize)):
         need_normalize.remove(not_to_normalize[i])
     '''
     normalize_mean  = []
     covariance = []
+   
     for i  in range (len(need_normalize)):
         normalize_mean.append(0)
         for j in range (len(X_train)):
+            
             normalize_mean[i]+=X_train[j][need_normalize[i]]
         normalize_mean[i]/=len(X_train)
     for i in range (len(need_normalize)):
@@ -80,8 +98,9 @@ def predict (X,w,text):
     df.to_csv(text,header=False)
 
 def train_3 (X,Y):
-    train_set_num = 18000
+    train_set_num = 20000
     valid_set_num = 2000
+    v_index=18000
     feat_num = len(X[0])
     w = []
     w_grad = []
@@ -101,10 +120,11 @@ def train_3 (X,Y):
     
 
 
-    for epoch in range(1,2001):
+    for epoch in range(1,1001):
         epoch_loss = 0.0
         
         for idx in range(train_set_num//100):
+            
             Xin = X[idx*batch_size:(idx+1)*batch_size]
             Yin = Y[idx*batch_size:(idx+1)*batch_size]
             for i in range (batch_size):
@@ -140,19 +160,21 @@ def train_3 (X,Y):
             x = (1/epoch) * w_grad_ada[feat_num]
             w[feat_num] = w[feat_num] - l_rate * w_grad[feat_num] *(1/x)
             
-        if (epoch+1) % 1== 0:
+        if (epoch+1) % 5== 0:
             epoch_loss_v = 0.0
             Y_predict_v = []
-            for i in range(18000,20000):
+            
+            for i in range(v_index,len(X)):
                 Y_predict_v.append(0)
-                Y_predict_v[i-18000]=0
+                Y_predict_v[i-v_index]=0
                 for j in range (feat_num):
-                    Y_predict_v[i-18000]+=X[i][j]*w[j]
-                Y_predict_v[i-18000]+=w[feat_num]
-                Y_predict_v[i-18000] = sigmoid(Y_predict_v[i-18000])
-                cross_entropy = - ( Y[i]*np.log(Y_predict_v[i-18000]) + (1-Y[i])*np.log(1-Y_predict_v[i-18000])   )
+                    Y_predict_v[i-v_index]+=X[i][j]*w[j]
+                Y_predict_v[i-v_index]+=w[feat_num]
+                Y_predict_v[i-v_index] = sigmoid(Y_predict_v[i-v_index])
+                cross_entropy = - ( Y[i]*np.log(Y_predict_v[i-v_index]) + (1-Y[i])*np.log(1-Y_predict_v[i-v_index])   )
                 epoch_loss_v += cross_entropy
-            print ('avg_loss in epoch%d : %f' % (epoch+1, (epoch_loss / train_set_num)),(epoch_loss_v/2000))
+            
+            print ('avg_loss in epoch%d : %f' % (epoch+1, (epoch_loss / train_set_num)),(epoch_loss_v/(len(X)-v_index)))
             #print(w,b)
         
     return w
@@ -247,78 +269,8 @@ def train_GD (X,Y):
         cross_entropy = - ( Y[i]*np.log(Y_predict) + (1-Y[i])*np.log(1-Y_predict)   )
         epoch_loss += cross_entropy
     print("epl: ",(epoch_loss_train/data_num),"epv:" ,(epoch_loss/valid_num))
-
-
     return w_return
 
-
-def train_5 (X,Y):
-    feat_num = len(X[0])
-    w = []
-    w_grad = []
-    for i in range (feat_num):
-        w.append(0)
-        w_grad.append(0)    
-    b=0.0
-    b_grad = 0.0
-    batch_size = 100
-    l_rate = 0.0003
-    
-    Y_predict = []
-    for i in range (batch_size):
-        Y_predict.append(0)
-    w = np.matrix(w)
-    for epoch in range(200):
-        epoch_loss = 0.0
-        X,Y = shuffle(X,Y)
-        for idx in range(180):
-            Xin = X[idx*batch_size:(idx+1)*batch_size]
-            Yin = Y[idx*batch_size:(idx+1)*batch_size]
-            Xin = np.matrix(Xin)
-
-            
-            Y_predict=Xin * w.getT()
-            Y_predict+=b
-           
-            Y_predict = sigmoid(Y_predict)
-            
-            for i in range(batch_size):
-                cross_entropy = - ( Yin[i]*np.log(Y_predict[i,0]) + (1-Yin[i])*np.log(1-Y_predict[i,0])   )
-                
-                epoch_loss += cross_entropy
-            
-            for i in range (feat_num):
-                w_grad[i]=0
-            b_grad
-        
-            for i in range(batch_size):
-                for j in range (feat_num):
-                    w_grad[j] += -1 * (Yin[i] - Y_predict[i,0] ) * Xin[i,j]
-                b_grad += -1 * (Yin[i] - Y_predict[i,0])
-            
-
-            for i in range (feat_num):
-                w[0,i] = w[0,i] - l_rate * w_grad[i]
-            b = b - l_rate * b_grad
-            
-        if (epoch+1) % 10== 0:
-            
-            epoch_loss_v = 0.0
-            Y_predict_v = []
-            for i in range(18000,20000):
-                Y_predict_v.append(0)
-                Y_predict_v[i-18000]=0
-                for j in range (feat_num):
-                    Y_predict_v[i-18000]+=X[i][j]*w[0,j]
-                Y_predict_v[i-18000]+=b
-                Y_predict_v[i-18000] = sigmoid(Y_predict_v[i-18000])
-                cross_entropy = - ( Y[i]*np.log(Y_predict_v[i-18000]) + (1-Y[i])*np.log(1-Y_predict_v[i-18000])   )
-                epoch_loss_v += cross_entropy
-            
-            print ('avg_loss in epoch%d : %f' % (epoch+1, (epoch_loss / 18000)),(epoch_loss_v/2000))
-            #print(w,b)
-        
-    return w
 
 
 def create_train_dataset(tf):
@@ -338,31 +290,53 @@ def create_train_label(tl):
     return Y
 
 def feat_expand (X):
+    
     num = len(X)
     square = [0,5,11,12,13,14,15,16,17,18,19,20,21,22]
-    cube   = [0,5,11,12,13,14,15,16,17,18,19,20,21,22]
+    cube   = [0,5,11]
     quada  = []
     panta  = []
     six  = []
     seven = []
+    
     for i in range (num):
         for j in range (len(square)):
             X[i].append(X[i][square[j]]**2)
         for j in range (len(cube)):
-            X[i].append(X[i][square[j]]**3)
-        for j in range (len(quada)):
-            X[i].append(X[i][square[j]]**4)
-        for j in range (len(panta)):
-            X[i].append(X[i][square[j]]**5)
-            X[i].append(X[i][square[j]]**6)
-            
+            X[i].append(X[i][cube[j]]**3)
+        
+        
+        
         
         
             
-        #for j in range (len(seven)):
-           # X[i].append(X[i][square[j]]**9)
+        
             
             
+    return X
+def age_one_hot (X):
+    data_num = len(X)
+    for i in range (data_num):
+        if(X[i][4]<30):
+            X[i].append(0)
+            X[i].append(0)
+            X[i].append(0)
+            X[i].append(1)
+        elif(X[i][4]>=30 and X[i][4]<50):
+            X[i].append(0)
+            X[i].append(0)
+            X[i].append(1)
+            X[i].append(0)
+        elif(X[i][4]>=50 and X[i][4]<70):
+            X[i].append(0)
+            X[i].append(1)
+            X[i].append(0)
+            X[i].append(0)
+        else:
+            X[i].append(1)
+            X[i].append(0)
+            X[i].append(0)
+            X[i].append(0)
     return X
 
 def feat_onehot (X):
@@ -408,16 +382,43 @@ def feat_onehot (X):
         
     return X
 
-def feat_delelte (X):
+def feat_delete (X):
     delete_feat = [1,2,3]
     for i in range (len(X)):
         for j in range (len(delete_feat)):
             X[i].remove(X[i][delete_feat[j]])
     return X
+
+def oversample(X,Y):
+    data_num=len(X)
+    index =len(X)
+    for i in range (data_num):
+        
+        if(Y[i]==1):
+            X.append([])
+            for j in range (len(X[0])):
+                X[index].append(X[i][j])
+            Y.append(Y[i])
+            index+=1
+            X.append([])
+            for j in range (len(X[0])):
+                X[index].append(X[i][j])
+            Y.append(Y[i])
+            index+=1
+    
+    return X ,Y
+
 def feat_process (feat):
     feat = feat_expand(feat)
-    feat = feat_onehot(feat)
-    feat = feat_delelte(feat)
+    feat = feat_onehot(feat) 
+    feat = feat_delete(feat)
     feat = feature_normalize_mean_covariance(feat)
+    
     print("feat_num:" ,len(feat[0]))
+    return feat
+
+def feat_process_GD (feat):
+    feat = feat_expand(feat)
+    feat = feature_normalize_mean_covariance(feat)
+    print("feat_num:" ,len(feat[0]),"data_num:",len(feat))
     return feat
