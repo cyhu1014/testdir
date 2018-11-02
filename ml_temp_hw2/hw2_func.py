@@ -72,6 +72,7 @@ def feature_normalize_mean_covariance(X_train):
     return X_train
 
 def predict (X,w,text):
+    
     Y = []
     feat_num = len(X[0])
     for i in range (len(X)):
@@ -178,98 +179,6 @@ def train_3 (X,Y):
             #print(w,b)
         
     return w
-
-def train_GD (X,Y):
-    data_num = 18000
-    valid_num = 2000
-    feat_num = len(X[0])
-    valid_num = 0
-    unvalid_num = 0
-    mean_valid = []
-    mean_unvalid = []
-    for i in range (data_num):
-        if(Y[i]==0):
-            valid_num+=1
-        else:
-            unvalid_num+=1
-
-    for i in range (feat_num):
-        mean_valid.append(0)
-        mean_unvalid.append(0)
-    for i in range (data_num):
-        if (Y[i]==1):
-            for j in range(feat_num):
-                mean_valid[j]+=X[i][j]
-        else:
-            for j in range(feat_num):
-                mean_unvalid[j]+=X[i][j]
-    for i in range (feat_num):
-        mean_valid[i]/=valid_num
-        mean_unvalid[i]/=unvalid_num
-    
-    ###create valid mean and covariance matrix
-    uvalid  = np.matrix(mean_valid)
-    uvalidT = uvalid.getT()
-    uunvalid  = np.matrix(mean_unvalid)
-    uunvalidT = uunvalid.getT()
-    cm = []
-    for i in range (feat_num):
-        cm.append([])
-        for j in range (feat_num):
-            cm[i].append(0.0)
-    c_matrix_valid = np.matrix(cm)
-    c_matrix_unvalid = np.matrix(cm)
-    for i in range (data_num):
-        x = np.matrix(X[i])
-        if (Y[i]==1):
-            a = x-uvalid
-            aT = a.getT()
-            y=aT*a
-  
-            c_matrix_valid+=y
-        else:
-            a = x-uunvalid
-            aT = a.getT()
-            y=aT*a
-            c_matrix_unvalid+=y
-    for i in range (feat_num):
-        for j in range (feat_num):
-            c_matrix_valid[i,j]/=valid_num
-            c_matrix_unvalid[i,j]/=unvalid_num
-    c_matrix = np.matrix(cm)
-    for i in range (feat_num):
-        for j in range (feat_num):
-            c_matrix[i,j]= c_matrix[i,j] + c_matrix_valid[i,j]*valid_num/data_num + c_matrix_unvalid[i,j] *unvalid_num/data_num
-    c_matrixI = c_matrix.getI()
-    
-    w = (uvalid-uunvalid) *c_matrixI
-    b = -0.5 * uvalid *c_matrixI*uvalidT + -0.5 * uunvalid *c_matrixI * uunvalidT +np.log(valid_num/unvalid_num)
-    
-    w_return = []
-    for i in range (feat_num):
-        w_return.append(w[0,i])
-    w_return.append(b[0,0])
-    epoch_loss = 0.0
-    for i in range(data_num):
-        Y_predict = 0.0
-        for j in range (feat_num):
-            Y_predict +=w_return[j]*X[i][j]
-        Y_predict+=w_return[feat_num]
-        Y_predict = sigmoid(Y_predict)
-        cross_entropy = - ( Y[i]*np.log(Y_predict) + (1-Y[i])*np.log(1-Y_predict)   )
-        epoch_loss += cross_entropy
-    epoch_loss_train = epoch_loss
-    epoch_loss = 0.0
-    for i in range(valid_num):
-        Y_predict = 0.0
-        for j in range (feat_num):
-            Y_predict +=w_return[j]*X[i][j]
-        Y_predict+=w_return[feat_num]
-        Y_predict = sigmoid(Y_predict)
-        cross_entropy = - ( Y[i]*np.log(Y_predict) + (1-Y[i])*np.log(1-Y_predict)   )
-        epoch_loss += cross_entropy
-    print("epl: ",(epoch_loss_train/data_num),"epv:" ,(epoch_loss/valid_num))
-    return w_return
 
 
 
@@ -417,8 +326,3 @@ def feat_process (feat):
     print("feat_num:" ,len(feat[0]))
     return feat
 
-def feat_process_GD (feat):
-    feat = feat_expand(feat)
-    feat = feature_normalize_mean_covariance(feat)
-    print("feat_num:" ,len(feat[0]),"data_num:",len(feat))
-    return feat
